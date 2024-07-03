@@ -14,32 +14,30 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Course } from "@prisma/client";
+import { Input } from "@/components/ui/input";
+import { formatPrice } from "@/lib/format";
 
 
-interface TitleFormProps {
-    initialData: {
-        title: string;
-    };
+interface PriceFormProps {
+    initialData: Course;
     courseId: string;
 };
 
 const formSchema = z.object({
-    title: z.string().min(2, {
-        message: "Atleast 2 Characters",
-    }).max(20, {
-        message: "Atmax 20 Characters",
-    })
+    price: z.coerce.number(),
 });
 
-const TitleForm = ({
+const PriceForm = ({
     initialData,
     courseId,
-}: TitleFormProps) => {
+}: PriceFormProps) => {
 
     const [isEditing, setIsEditing] = useState(false);
     const { toast } = useToast();
@@ -52,7 +50,9 @@ const TitleForm = ({
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            price: initialData?.price || undefined,
+        }
     });
 
     const { isSubmitting, isValid } = form.formState;
@@ -62,7 +62,7 @@ const TitleForm = ({
         try {
             const course = await axios.patch(`/api/courses/${courseId}`, values);
             toast({
-                title: "Title Changed Succesfully",
+                title: "Description Updated Succesfully",
             })
             clickEdit();
             router.refresh();
@@ -77,31 +77,45 @@ const TitleForm = ({
     return (
         <div className="mt-6 border bg-slate-100 rounded-md p-4">
             <div className="font-bold flex items-center justify-between">
-                Course Title
+                Course Price
             </div>
             <div className="font-medium flex justify-between">
                 <div className="flex items-center">
                     {(!isEditing) ? (
-                        <p className="text-sm mt-2">
-                            {initialData.title}
+                        <p className={cn(
+                            "text-sm mt-2",
+                            !initialData.price && "text-slate-500 italic"
+                        )}
+                        >
+                            {(initialData.price) ? (
+                                <>
+                                    {formatPrice(initialData.price)}
+                                </>
+                            ) : (
+                                <>
+                                    No Price
+                                </>
+                            )}
                         </p>
                     ) : (
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-x-2 mt-4 flex">
                                 <FormField
                                     control={form.control}
-                                    name="title"
+                                    name="price"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormControl>
                                                 <Input
+                                                    type="number"
+                                                    step="1.0"
                                                     disabled={isSubmitting}
-                                                    placeholder="Course title"
+                                                    placeholder="Course Price"
                                                     {...field}
                                                 />
                                             </FormControl>
                                             <FormDescription>
-                                                Title Should Atleast of 2 Characters
+                                                Descripition Should of 200 Characters or Less
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>
@@ -137,4 +151,4 @@ const TitleForm = ({
     );
 }
 
-export default TitleForm;
+export default PriceForm;

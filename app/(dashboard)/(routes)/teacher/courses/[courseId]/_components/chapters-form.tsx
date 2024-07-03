@@ -14,45 +14,44 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Pencil } from "lucide-react";
+import { Pencil, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Chapter, Course } from "@prisma/client";
+import { Input } from "@/components/ui/input";
 
 
-interface TitleFormProps {
-    initialData: {
-        title: string;
-    };
+interface ChaptersFormProps {
+    initialData: Course & { chapters: Chapter[] };
     courseId: string;
 };
 
 const formSchema = z.object({
-    title: z.string().min(2, {
-        message: "Atleast 2 Characters",
-    }).max(20, {
-        message: "Atmax 20 Characters",
-    })
+    title: z.string().min(1),
 });
 
-const TitleForm = ({
+const ChaptersForm = ({
     initialData,
     courseId,
-}: TitleFormProps) => {
+}: ChaptersFormProps) => {
 
-    const [isEditing, setIsEditing] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const { toast } = useToast();
 
-    const clickEdit = () => {
-        setIsEditing(
+    const clickCreating = () => {
+        setIsCreating(
             (current) => !current
         )
     }
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            title: "",
+        }
     });
 
     const { isSubmitting, isValid } = form.formState;
@@ -60,15 +59,15 @@ const TitleForm = ({
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
-            const course = await axios.patch(`/api/courses/${courseId}`, values);
+            const course = await axios.post(`/api/courses/${courseId}/chapters`, values);
             toast({
-                title: "Title Changed Succesfully",
+                title: "Chapter Created",
             })
-            clickEdit();
+            clickCreating();
             router.refresh();
         } catch {
             toast({
-                title: "Something went wrong.",
+                title: "Something went wrong. On submit",
                 description: "Try again",
             })
         }
@@ -77,15 +76,11 @@ const TitleForm = ({
     return (
         <div className="mt-6 border bg-slate-100 rounded-md p-4">
             <div className="font-bold flex items-center justify-between">
-                Course Title
+                Course Chapters
             </div>
             <div className="font-medium flex justify-between">
                 <div className="flex items-center">
-                    {(!isEditing) ? (
-                        <p className="text-sm mt-2">
-                            {initialData.title}
-                        </p>
-                    ) : (
+                    {(isCreating) && (
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-x-2 mt-4 flex">
                                 <FormField
@@ -96,12 +91,12 @@ const TitleForm = ({
                                             <FormControl>
                                                 <Input
                                                     disabled={isSubmitting}
-                                                    placeholder="Course title"
+                                                    placeholder="Chapter Name"
                                                     {...field}
                                                 />
                                             </FormControl>
                                             <FormDescription>
-                                                Title Should Atleast of 2 Characters
+                                                Descripition Should of 200 Characters or Less
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>
@@ -111,22 +106,35 @@ const TitleForm = ({
                                     type="submit"
                                     disabled={!isValid || isSubmitting}
                                 >
-                                    Save
+                                    Create
                                 </Button>
                             </form>
                         </Form>
                     )}
+                    {!isCreating && (
+                        <div className={cn(
+                            "text-sm mt-2",
+                            !initialData.chapters.length && "text-slate-500 italic"
+                        )}>
+                            {!initialData.chapters.length && "No Chapters"}
+                            {/* {List Of Chapters} */}
+                            <p className="text-xs text-muted-foreground mt-4">
+                                Drag and Drop to reorder the chapters
+                            </p>
+                        </div>
+                    )}
+
                 </div>
                 <div>
-                    <Button onClick={clickEdit} variant="ghost" className="mt-3">
-                        {(isEditing) ? (
+                    <Button onClick={clickCreating} variant="ghost" className="mt-3">
+                        {(isCreating) ? (
                             <>
                                 Cancel
                             </>
                         ) : (
                             <>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
+                                <PlusCircle className="h-4 w-4 mr-2" />
+                                Add
                             </>
                         )
                         }
@@ -137,4 +145,4 @@ const TitleForm = ({
     );
 }
 
-export default TitleForm;
+export default ChaptersForm;

@@ -1,10 +1,10 @@
 "use client";
 
-import * as z from "zod"
+import * as z from "zod";
 import axios from "axios";
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Button } from "@/components/ui/button"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
@@ -13,104 +13,99 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Course } from "@prisma/client";
+import { Combobox } from "@/components/ui/combobox";
 
-
-interface TitleFormProps {
-    initialData: {
-        title: string;
-    };
+interface CategoryFormProps {
+    initialData: Course;
     courseId: string;
-};
+    options: { label: string; value: string }[];
+}
 
 const formSchema = z.object({
-    title: z.string().min(2, {
-        message: "Atleast 2 Characters",
-    }).max(20, {
-        message: "Atmax 20 Characters",
-    })
+    categoryId: z.string().min(1, "Category is required"),
 });
 
-const TitleForm = ({
+const CategoryForm = ({
     initialData,
     courseId,
-}: TitleFormProps) => {
-
+    options
+}: CategoryFormProps) => {
     const [isEditing, setIsEditing] = useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
     const clickEdit = () => {
-        setIsEditing(
-            (current) => !current
-        )
-    }
+        setIsEditing((current) => !current);
+    };
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            categoryId: initialData?.categoryId || ""
+        },
     });
 
     const { isSubmitting, isValid } = form.formState;
-    const router = useRouter();
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
-            const course = await axios.patch(`/api/courses/${courseId}`, values);
+            await axios.patch(`/api/courses/${courseId}`, values);
             toast({
-                title: "Title Changed Succesfully",
-            })
+                title: "Category Updated Successfully",
+            });
             clickEdit();
             router.refresh();
         } catch {
             toast({
                 title: "Something went wrong.",
                 description: "Try again",
-            })
+            });
         }
-    }
+    };
+
+    const selectedOption = options.find((option) => option.value === initialData.categoryId);
 
     return (
         <div className="mt-6 border bg-slate-100 rounded-md p-4">
-            <div className="font-bold flex items-center justify-between">
-                Course Title
-            </div>
+            <div className="font-bold flex items-center justify-between">Course Category</div>
             <div className="font-medium flex justify-between">
                 <div className="flex items-center">
-                    {(!isEditing) ? (
-                        <p className="text-sm mt-2">
-                            {initialData.title}
+                    {!isEditing ? (
+                        <p
+                            className={cn(
+                                "text-sm mt-2",
+                                !initialData.categoryId && "text-slate-500 italic"
+                            )}
+                        >
+                            {selectedOption?.label || "No Category"}
                         </p>
                     ) : (
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-x-2 mt-4 flex">
                                 <FormField
                                     control={form.control}
-                                    name="title"
+                                    name="categoryId"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormControl>
-                                                <Input
-                                                    disabled={isSubmitting}
-                                                    placeholder="Course title"
+                                                <Combobox
+                                                    options={options}
                                                     {...field}
                                                 />
                                             </FormControl>
-                                            <FormDescription>
-                                                Title Should Atleast of 2 Characters
-                                            </FormDescription>
+                                            <FormDescription>Description should be 200 characters or less</FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
-                                <Button
-                                    type="submit"
-                                    disabled={!isValid || isSubmitting}
-                                >
+                                <Button type="submit" disabled={!isValid || isSubmitting}>
                                     Save
                                 </Button>
                             </form>
@@ -119,22 +114,16 @@ const TitleForm = ({
                 </div>
                 <div>
                     <Button onClick={clickEdit} variant="ghost" className="mt-3">
-                        {(isEditing) ? (
-                            <>
-                                Cancel
-                            </>
-                        ) : (
-                            <>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                            </>
-                        )
+                        {isEditing ? ("Cancel") : <>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                        </>
                         }
                     </Button>
                 </div>
             </div>
-        </div >
+        </div>
     );
-}
+};
 
-export default TitleForm;
+export default CategoryForm;

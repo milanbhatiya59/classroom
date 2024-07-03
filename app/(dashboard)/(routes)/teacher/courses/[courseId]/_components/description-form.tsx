@@ -123,7 +123,7 @@ const DescriptionForm = ({
                                     type="submit"
                                     disabled={!isValid || isSubmitting}
                                 >
-                                    Submit
+                                    Save
                                 </Button>
                             </form>
                         </Form>

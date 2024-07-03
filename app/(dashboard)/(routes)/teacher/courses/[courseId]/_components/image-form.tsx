@@ -39,21 +39,13 @@ const ImageForm = ({
         )
     }
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            imageUrl: initialData?.description || "",
-        }
-    });
-
-    const { isSubmitting, isValid } = form.formState;
     const router = useRouter();
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             const course = await axios.patch(`/api/courses/${courseId}`, values);
             toast({
-                title: "Description Updated Succesfully",
+                title: "Image Updated Succesfully",
             })
             clickEdit();
             router.refresh();
@@ -68,7 +60,7 @@ const ImageForm = ({
     return (
         <div className="mt-6 border bg-slate-100 rounded-md p-4">
             <div className="font-bold flex items-center justify-between">
-                Course Thubnail Image
+                Course Thumbnail Image
                 <Button onClick={clickEdit} variant="ghost" className="mt-3">
                     {(!isEditing) ? (
                         <>
