@@ -9,7 +9,7 @@ interface AuthProviderProps {
 
 const AuthProvider = ({
     children
-}: AuthProviderProps) => { 
+}: AuthProviderProps) => {
     return (
         <SessionProvider>
             {children}
