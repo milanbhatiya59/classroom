@@ -27,17 +27,14 @@ import {
 } from "@/components/ui/dialog";
 import { NextResponse } from "next/server"
 import { toast } from "@/components/ui/use-toast"
-
-
+import { Textarea } from "@/components/ui/textarea"
+import { useSession } from "next-auth/react";
 
 const formSchema = z.object({
-    classname: z.string().min(1, {
+    subject: z.string().min(1, {
         message: "Classname is Required",
     }),
-    subject: z.string().min(1, {
-        message: "Subject is Required",
-    }),
-    section: z.string(),
+    description: z.string(),
 
 })
 
@@ -48,32 +45,35 @@ const CreateClass = () => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            classname: "",
             subject: "",
-            section: "",
+            description: "",
         },
     })
 
-    const createClass = async (values: { classname: string; subject: string; section: string | null }) => {
-        const classname = values.classname;
+    const { data } = useSession();
+    const userId = data?.user?.id;
+
+    const createClass = async (values: { subject: string; description: string | null }) => {
         const subject = values.subject;
-        const section = values.section;
+        const description = values.description;
         let data;
         try {
-            data = await fetch("http://localhost:3000/api/create-classes", {
+            data = await fetch("http://localhost:3000/api/classes", {
                 method: "POST",
-                body: JSON.stringify({ classname, subject, section }),
+                body: JSON.stringify({ userId, subject, description }),
             })
         } catch (error) {
             data = { success: false };
         }
+
+        console.log(data);
         if (data.status === 404) {
             toast({
                 variant: "destructive",
                 title: "Class cannot Created",
             })
         }
-        else if (data.status === 200) {
+        else if (data.status === 201) {
             toast({
                 title: "Class Created",
             })
@@ -83,7 +83,9 @@ const CreateClass = () => {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         handleClose();
-        // createClass(values);
+        createClass(values);
+        console.log(values);
+
         form.reset();
     }
 
@@ -97,31 +99,19 @@ const CreateClass = () => {
             >
                 <DialogTrigger asChild>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[425px]" aria-describedby="dialog-description">
                     <DialogHeader>
                         <DialogTitle>
                             Create or Join a Class
                         </DialogTitle>
                     </DialogHeader>
+                    <div id="dialog-description" className="sr-only">
+                        Fill out the form below to create or join a class.
+                    </div>
                     <div className="grid gap-4 py-4">
                         <div className="flex flex-col gap-4">
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                                    <FormField
-                                        control={form.control}
-                                        name="classname"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    Class name <p className="text-slate-500">(required)</p>
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
                                     <FormField
                                         control={form.control}
                                         name="subject"
@@ -139,12 +129,12 @@ const CreateClass = () => {
                                     />
                                     <FormField
                                         control={form.control}
-                                        name="section"
+                                        name="description"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Section</FormLabel>
+                                                <FormLabel>Description</FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} />
+                                                    <Textarea placeholder="Type your message here." {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

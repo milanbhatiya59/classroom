@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast"
 import { NextResponse } from "next/server"
+import { useSession } from "next-auth/react";
 
 const formSchema = z.object({
     classcode: z.string().min(1, {
@@ -46,13 +47,17 @@ const JoinClass = () => {
         },
     })
 
+
+    const { data } = useSession();
+    const userId = data?.user?.id;
+
     const joinClass = async (values: { classcode: string }) => {
-        const classid = values.classcode;
+        const classId = values.classcode;
         let data;
         try {
-            console.log(classid)
-            data = await fetch(`http://localhost:3000/api/join-classes/${classid}`, {
-                method: "GET",
+            data = await fetch(`http://localhost:3000/api/joinClassAsStudent`, {
+                method: "POST",
+                body: JSON.stringify({ userId, classId }),
             })
         } catch (error) {
             data = { success: false };
@@ -61,6 +66,11 @@ const JoinClass = () => {
             toast({
                 variant: "destructive",
                 title: "Class not Found",
+            })
+        }
+        else if (data.status === 400) {
+            toast({
+                title: "Already Joined",
             })
         }
         else if (data.status === 200) {
@@ -74,7 +84,7 @@ const JoinClass = () => {
     function onSubmit(values: z.infer<typeof formSchema>) {
         handleClose();
         console.log(values.classcode);
-        // joinClass(values);
+        joinClass(values);
         form.reset();
     }
 

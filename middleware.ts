@@ -4,5 +4,5 @@ export { default } from "next-auth/middleware"
 const { data: session } = useSession()
 
 export const config = {
-    matcher: ['/']
+    matcher: ['/teaching']
 }

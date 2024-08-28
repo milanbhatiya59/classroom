@@ -1,7 +1,6 @@
 import dbConnect from '@/lib/dbConnect';
 import UserModel from '@/models/User';
 import ClassModel, { TeacherRef } from '@/models/Class';
-import { Schema } from 'mongoose';
 
 export async function POST(req: Request) {
     try {

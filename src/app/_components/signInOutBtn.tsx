@@ -16,8 +16,6 @@ function SignInOutBtn() {
         setAuthProvider();
     }, []);
 
-    console.log(session);
-
 
     return (
         <>

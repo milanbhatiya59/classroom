@@ -39,7 +39,7 @@ const LearningRoute = [
 export const SidebarRoutes = () => {
 
     return (
-        <div className='flex flex-col w-full mt-2'>
+        <div className='flex flex-col w-full mt-10'>
             {HomeRoute.map((route) => (
                 <SidebarItem
                     key={route.href}
