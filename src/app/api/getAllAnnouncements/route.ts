@@ -1,5 +1,5 @@
 import dbConnect from '@/lib/dbConnect';
-import ClassModel from '@/models/Class';
+import AnnouncementModel from '@/models/Announcement';
 
 export async function GET(req: Request) {
     try {
@@ -16,26 +16,17 @@ export async function GET(req: Request) {
             );
         }
 
-        // Find the class by ID and populate the announcements
-        const classData = await ClassModel.findById(classId).populate('announcements.announcementId');
-        if (!classData) {
-            return new Response(
-                JSON.stringify({ success: false, message: 'Class not found' }),
-                { status: 404 }
-            );
-        }
-
-        // Extract the announcements from the populated class
-        const announcements = classData.announcements.map(ann => ann.announcementId);
+        // Find all announcements for the given class ID
+        const announcements = await AnnouncementModel.find({ classId });
 
         return new Response(
             JSON.stringify({ success: true, announcements }),
             { status: 200 }
         );
     } catch (error) {
-        console.error('Error fetching class announcements:', error);
+        console.error('Error fetching announcements:', error);
         return new Response(
-            JSON.stringify({ success: false, message: 'Error fetching class announcements' }),
+            JSON.stringify({ success: false, message: 'Error fetching announcements' }),
             { status: 500 }
         );
     }

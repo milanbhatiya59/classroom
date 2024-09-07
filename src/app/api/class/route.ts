@@ -57,3 +57,44 @@ export async function POST(req: Request) {
         );
     }
 }
+
+
+export async function GET(req: Request) {
+    try {
+        await dbConnect();
+
+        // Extract classId from query parameters
+        console.log(req.url);
+
+        const { searchParams } = new URL(req.url);
+        const classId = searchParams.get('classId');
+
+        if (!classId) {
+            return new Response(
+                JSON.stringify({ success: false, message: 'Class ID is required' }),
+                { status: 400 }
+            );
+        }
+
+        // Find the class by ID
+        const classData = await ClassModel.findById(classId);
+        if (!classData) {
+            return new Response(
+                JSON.stringify({ success: false, message: 'Class not found' }),
+                { status: 404 }
+            );
+        }
+
+        return new Response(
+            JSON.stringify({ success: true, message: 'Class found successfully', classData }),
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error('Error fetching class data:', error);
+        return new Response(
+            JSON.stringify({ success: false, message: 'Error fetching class data' }),
+            { status: 500 }
+        );
+    }
+}
+

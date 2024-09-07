@@ -1,32 +1,32 @@
 import dbConnect from '@/lib/dbConnect';
-import CommentModel from '@/models/Comment';
+import AnnouncementModel from '@/models/Announcement';
 
 export async function GET(req: Request) {
     try {
         await dbConnect();
 
-        // Extract the announcementId from the query parameters
+        // Extract the classId from the query parameters
         const url = new URL(req.url);
-        const announcementId = url.searchParams.get('announcementId');
+        const classId = url.searchParams.get('classId');
 
-        if (!announcementId) {
+        if (!classId) {
             return new Response(
-                JSON.stringify({ success: false, message: 'Announcement ID is required' }),
+                JSON.stringify({ success: false, message: 'Class ID is required' }),
                 { status: 400 }
             );
         }
 
-        // Find all comments for the given announcement ID
-        const comments = await CommentModel.find({ announcementId });
+        // Find all announcements for the given class ID
+        const announcements = await AnnouncementModel.find({ classId });
 
         return new Response(
-            JSON.stringify({ success: true, comments }),
+            JSON.stringify({ success: true, announcements }),
             { status: 200 }
         );
     } catch (error) {
-        console.error('Error fetching announcement comments:', error);
+        console.error('Error fetching announcements:', error);
         return new Response(
-            JSON.stringify({ success: false, message: 'Error fetching announcement comments' }),
+            JSON.stringify({ success: false, message: 'Error fetching announcements' }),
             { status: 500 }
         );
     }

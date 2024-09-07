@@ -58,7 +58,7 @@ const CreateClass = () => {
         const description = values.description;
         let data;
         try {
-            data = await fetch("http://localhost:3000/api/classes", {
+            data = await fetch("http://localhost:3000/api/class", {
                 method: "POST",
                 body: JSON.stringify({ userId, subject, description }),
             })

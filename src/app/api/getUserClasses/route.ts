@@ -15,29 +15,38 @@ export async function GET(req: Request) {
                 JSON.stringify({ success: false, message: 'User ID is required' }),
                 { status: 400 }
             );
+        }
 
-
-            // Find the user by ID and populate the enrollments
-            const userData = await UserModel.findById(userId).populate('enrollments.classId');
-            if (!userData) {
-                return new Response(
-                    JSON.stringify({ success: false, message: 'User not found' }),
-                    { status: 404 }
-                );
-            }
-
-            // Extract the classes from the populated enrollments
-            const classes = userData.enrollments.map(enrollment => enrollment.classId);
-
+        // Find the user by ID
+        const userData = await UserModel.findById(userId);
+        if (!userData) {
             return new Response(
-                JSON.stringify({ success: true, classes }),
-                { status: 200 }
-            );
-        } catch (error) {
-            console.error('Error fetching user classes:', error);
-            return new Response(
-                JSON.stringify({ success: false, message: 'Error fetching user classes' }),
-                { status: 500 }
+                JSON.stringify({ success: false, message: 'User not found' }),
+                { status: 404 }
             );
         }
+
+        // Fetch class data for each enrollment
+        const classes = await Promise.all(
+            userData.enrollments.map(async (enrollment) => {
+                const classData = await ClassModel.findById(enrollment.classId);
+                return {
+                    id: classData?._id,
+                    subject: classData?.subject,
+                    description: classData?.description,
+                };
+            })
+        );
+
+        return new Response(
+            JSON.stringify({ success: true, data: classes }),
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error('Error fetching user classes:', error);
+        return new Response(
+            JSON.stringify({ success: false, message: 'Error fetching user classes' }),
+            { status: 500 }
+        );
     }
+}
